@@ -170,9 +170,13 @@ void opencl_run_kernel(unsigned int count_v0, unsigned int max_points, unsigned 
   /*profile_event(&event);*/
   clReleaseEvent(_event);
 
-  for(i = 0; i < count_v0; i++)
-    for(j = 0; j < n_points[i]; j++)
+  for(i = 0; i < count_v0; i++){
+    for(j = 0; j < n_points[i]; j++){
      printf("%f %f %f\n", points[(i+7*j)].x,points[(i+7*j)].y,points[(i+7*j)].z);
+    }
+    printf("\n");
+  }
+    
   
   /*printf("%lf\n", total*NANO);*/
 }
