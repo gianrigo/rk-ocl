@@ -40,6 +40,6 @@ int main() {
     }
   }
  
-  opencl_init("rk4_kernel", v0, count_v0, h, n_x, n_y, n_z, field);
+  opencl_init("rk2_kernel", v0, count_v0, h, n_x, n_y, n_z, field);
   return 0;
 }
