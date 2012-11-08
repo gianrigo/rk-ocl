@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "opcl.h"
 
-/* Objetos do Open CL */
 cl_platform_id _platform;
 cl_context _context;
 cl_device_id* _devices;
@@ -15,7 +14,7 @@ double total = 0;*/
 unsigned int _devices_found;
 unsigned int _device_used = 0;
 
-unsigned int /*RK_OpenCL::*/opencl_create_platform(unsigned int num_platforms){
+void /*RK_OpenCL::*/opencl_create_platform(unsigned int num_platforms){
   cl_uint num_platforms_found;
   
   clGetPlatformIDs( 0, NULL, &num_platforms_found);
@@ -23,10 +22,9 @@ unsigned int /*RK_OpenCL::*/opencl_create_platform(unsigned int num_platforms){
     printf("\nERROR: Failed to create plataform.\n");
     exit(-1);
   }
-  return num_platforms_found;
 }
 
-unsigned int /*RK_OpenCL::*/opencl_get_devices_id() {
+void /*RK_OpenCL::*/opencl_get_devices_id() {
 
   clGetDeviceIDs(_platform, CL_DEVICE_TYPE_ALL, 0, NULL, &_devices_found);
   _devices = (cl_device_id*) malloc(_devices_found*(sizeof(cl_device_id)));
@@ -35,7 +33,6 @@ unsigned int /*RK_OpenCL::*/opencl_get_devices_id() {
     printf("\nERROR: Failed to get devices id's.\n");
     exit(-1);
   }
-  return _devices_found;
 }
 
 void /*RK_OpenCL::*/opencl_create_context(){
@@ -188,7 +185,7 @@ void /*RK_OpenCL::*/opencl_init(char* kernel_name, vector *v0, int count_v0, dou
   opencl_get_devices_id();
   opencl_create_context();
   opencl_create_queue();
-  opencl_create_program("rk_kernel.cl");
+  opencl_create_program();
   opencl_create_kernel(kernel_name);
 
   n_points = (unsigned int*) malloc(count_v0*sizeof(unsigned int));
