@@ -24,6 +24,6 @@ opcl.o: opcl.c opcl.h
 	gcc -c  opcl.c -o opcl.o -Wall -pedantic -Wextra
 
 clean:
-	rm -f *.o *.dat rk
+	rm -f *.o *.dat *~ *.p rk
 
 

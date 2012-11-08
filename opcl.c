@@ -1,10 +1,6 @@
 #include <stdio.h>
 #include "opcl.h"
 
-#define MAXSTR 128
-#define MS 1024
-#define NANO 1e-6f 
-
 /* Objetos do Open CL */
 cl_platform_id _platform;
 cl_context _context;
@@ -154,41 +150,34 @@ void /*RK_OpenCL::*/prepare_kernel(vector *v0, unsigned int count_v0, float h, i
   clFinish(_queue);
 }
 
-int opencl_run_kernel(unsigned int count_v0, unsigned int max_points, unsigned int *n_points, vector *points){
+void opencl_run_kernel(unsigned int count_v0, unsigned int max_points, unsigned int *n_points, vector *points){
   size_t work_dim[1];
-  unsigned int* Mc;
   unsigned int i, j;
-  vector* pts;
 
-  work_dim[0] = 7;
-  Mc = malloc(sizeof(unsigned int)*7);
-  pts = malloc(sizeof(vector)*7*10000);
-
+  work_dim[0] = count_v0;
   clEnqueueNDRangeKernel(_queue, _kernel, 1, NULL, work_dim, NULL, 0, NULL, &_event);
-    
   /*profile_event(&event);*/
   clReleaseEvent(_event);
   clFinish(_queue);
 
-  if( clEnqueueReadBuffer(_queue, _opencl_n_points, CL_TRUE, 0, sizeof(unsigned int)*7/*(*count_v0)*/, Mc, 0, NULL, &_event) 
-      == CL_INVALID_VALUE ) printf("ERRROROOO\n");
+  if( clEnqueueReadBuffer(_queue, _opencl_n_points, CL_TRUE, 0, sizeof(unsigned int)*count_v0, n_points, 0, NULL, &_event) == CL_INVALID_VALUE ){
+    printf("\nERROR: Failed to read buffer \"n_points\".\n");
+    exit(-1);
+  }
   /*profile_event(&event);*/
   clReleaseEvent(_event);
-  if( clEnqueueReadBuffer(_queue, _opencl_points, CL_TRUE, 0, sizeof(vector)*7*10000/*sizeof(vector)*count_v0*max_points*/, pts, 0, NULL, &_event) 
-      == CL_INVALID_VALUE ) printf("ERRROROOO\n");
+  if( clEnqueueReadBuffer(_queue, _opencl_points, CL_TRUE, 0, sizeof(vector)*count_v0*max_points, points, 0, NULL, &_event) == CL_INVALID_VALUE ){
+    printf("\nERROR: Failed to read buffer \"points\".\n");
+    exit(-1);
+  }
   /*profile_event(&event);*/
   clReleaseEvent(_event);
 
-  for(i = 0; i < 7; i++){
-    for(j = 0; j < Mc[i]; j++){
-     printf("%f %f %f\n", pts[(i+7*j)].x,pts[(i+7*j)].y,pts[(i+7*j)].z);
-    }
-  }
+  for(i = 0; i < count_v0; i++)
+    for(j = 0; j < n_points[i]; j++)
+     printf("%f %f %f\n", points[(i+7*j)].x,points[(i+7*j)].y,points[(i+7*j)].z);
   
   /*printf("%lf\n", total*NANO);*/
-  free(Mc);
-  free(pts);
-  return 1;
 }
 
 void /*RK_OpenCL::*/opencl_init(char* kernel_name, vector *v0, int count_v0, double h, int n_x, int n_y, int n_z, vector_field field/*, runge_kutta::Fiber **fibers*/){
