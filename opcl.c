@@ -147,10 +147,14 @@ void /*RK_OpenCL::*/prepare_kernel(vector *v0, unsigned int count_v0, float h, i
   clFinish(_queue);
 }
 
-void opencl_run_kernel(unsigned int count_v0, unsigned int max_points, unsigned int *n_points, vector *points){
+void opencl_run_kernel(unsigned int count_v0, unsigned int max_points){
   size_t work_dim[1];
-  unsigned int i, j;
-
+  unsigned int i, j, *n_points;
+  vector *points;
+  
+  n_points = (unsigned int*) malloc(count_v0*sizeof(unsigned int));
+  points = (vector*) malloc(count_v0*max_points*sizeof(vector));
+  
   work_dim[0] = count_v0;
   clEnqueueNDRangeKernel(_queue, _kernel, 1, NULL, work_dim, NULL, 0, NULL, &_event);
   /*profile_event(&event);*/
@@ -176,14 +180,22 @@ void opencl_run_kernel(unsigned int count_v0, unsigned int max_points, unsigned 
     }
     printf("\n");
   }
-    
+   
+  free(n_points);
+  free(points);   
   
+  /* *fibers = (runge_kutta::Fiber *) malloc(count_v0*sizeof(runge_kutta::Fiber));
+  for(i = 0; i < count_v0; i++){
+    (*fibers)[i] = runge_kutta::Fiber(n_points[i]);
+    for(j = 0; j < n_points[i]; j++){
+      (*fibers)[i].setPoint(j, points[(i+count_v0*j)]);
+    }
+  }*/
   /*printf("%lf\n", total*NANO);*/
 }
 
 void /*RK_OpenCL::*/opencl_init(char* kernel_name, vector *v0, int count_v0, double h, int n_x, int n_y, int n_z, vector_field field/*, runge_kutta::Fiber **fibers*/){
-  unsigned int max_points, available, *n_points, i, j;
-  vector *points;
+  unsigned int max_points, available;
 
   opencl_create_platform(2);
   opencl_get_devices_id();
@@ -192,26 +204,9 @@ void /*RK_OpenCL::*/opencl_init(char* kernel_name, vector *v0, int count_v0, dou
   opencl_create_program();
   opencl_create_kernel(kernel_name);
 
-  n_points = (unsigned int*) malloc(count_v0*sizeof(unsigned int));
   clGetDeviceInfo(*_devices,CL_DEVICE_GLOBAL_MEM_SIZE,sizeof(available),&available,NULL);
   max_points = (available*0.9)/(sizeof(vector)*count_v0);
-  points = (vector*) malloc(count_v0*max_points*sizeof(vector));
   
   prepare_kernel(v0, count_v0, h, n_x, n_y, n_z, field, max_points);
-  opencl_run_kernel(count_v0, max_points, n_points,points);
-
-  /*printf("Coping the result...");
-  *fibers = (runge_kutta::Fiber *) malloc(count_v0*sizeof(runge_kutta::Fiber));
-  for(i = 0; i < count_v0; i++){
-    (*fibers)[i] = runge_kutta::Fiber(n_points[i]);
-    for(j = 0; j < n_points[i]; j++){
-      (*fibers)[i].setPoint(j, points[(i+count_v0*j)]);
-    }
-  }
-  printf(" OK.\n");*/
-  
-  free(n_points);
-  free(points);  
+  opencl_run_kernel(count_v0, max_points);
 }
-
-
